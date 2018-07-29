@@ -3,4 +3,4 @@
 
 아가타 토시타카 지음 | 정인식 옮김 | 제이펍 | 2011년 12월 09일 출간
 
-![book](/book-img.png)
+![book](./book-img.png)
