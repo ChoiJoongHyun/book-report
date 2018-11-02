@@ -407,3 +407,240 @@ console.log(newMap);//Map {'key2', 'value2'}
 var set = new Set();
 set.add("a").add("b").add("b")  //set : a, b
 ```
+
+Generator
+---------
+
+##### Generator & yield
+
+-	이터러블한 객체이다.
+-	일시정지와 재시작 기능을 사용 가능
+-	function 뒤에 * 이 붙는다.
+-	yield 구문 사용 가능
+	-	generator 함수안에는 yield 구분 사용가능
+	-	yield 는 generator 를 멈추었다가 다음에 다시 이어서 시작할수 있게 만든다.
+
+```javascript
+//generator 함수
+function* intro(name) {
+  yield name + "님 안녕하세요";
+  yield "안녕?";
+  yield "안녕?하세요?";
+}
+let iter = intro("중현");
+console.log(iter.next()); //{value: '중현님 안녕하세요', done true}
+console.log(iter.next()); //{value: '안녕?', done true}
+console.log(iter.next()); //{value: '안녕?하세요?', done true}
+console.log(iter.next()); //{value: undefined, done true}
+
+```
+
+-	generator 반복이 끝나는 시점
+	-	함수의 끝부분까지 모두 수행되어 이터레이터 종료
+	-	generator 함수에서 return 사용
+	-	error 발생
+
+##### yield\*
+
+-	yield 를 사용하면 한가지 값을 반환할수 있다.
+-	yield* 를 사용하면 해당되는 이터러블 값을 순차적으로 반환 할 수 있다.
+
+```javascript
+function* myGenFn() {
+  yield* [1,2,3,4,5,6,7];
+  yield 8;
+  yield 9;
+}
+```
+
+Promise
+-------
+
+##### Promise
+
+-	가장 중요한 기능 중 하나..
+-	비동기 처리를 좀 더 쉽게 하기 위해 언어적 차원에서 지원하는 특징
+-	자바스크립트에서 기존에 사용하던 콜백 패턴은 에러처리가 쉽지 않음.
+
+```javascript
+const promise = new Promise(function(resolve, reject) {
+  //비동기 처리 작성...
+  //처리가 끝나면  resolve (완료되었을경우) 또는 reject (에러일경우) 를 호출.
+})
+
+```
+
+##### then()
+
+-	then 메소드는 모든 promise에 존재하며 두개의 파라미터를 갖는다. (then(function({}), function(){}))
+	-	첫번째 파라미터는 promise 가 수행될떄 호출할 함수
+	-	두번째 파라미터는 promise 가 거부될때 호출할 함수
+
+```javascript
+const promise = new Promise(function(resolve, reject){
+  console.log("promise");
+  resolve();  //resolve 를 호출하면 비동기 작업이 트리거된다.
+});
+promise.then(function() {
+  console.log("resolve");
+});
+console.log("hi");
+
+//promise
+//hi
+//resolved
+```
+
+-	then 메소드를 통해 promise 객체를 호출하면 매번 새로운 promise 객체를 생성해 반환한다.
+
+```javascript
+const promise = new Promise(function(resolve, reject){
+  reject("rejected!");  //resolve 를 호출하면 비동기 작업이 트리거된다.
+});
+promise.then(function(contents) {
+  console.log("contents");
+}, function(err){
+  console.log("er : " + err);
+});
+//err : rejected!
+```
+
+##### chaining
+
+-	여러개의 promise를 연결
+-	promise chaining 은 하나의 promise에서 다음 프로미스로 데이터를 전달한다.
+
+```javascript
+
+let promise = new Promise(function(resolve, reject){
+  resolve(1);
+})
+promise.then(function(value) {
+  return value + 9;
+})
+.then(function(value)) {
+  return value * 2;
+})
+.then(console.log); //20
+
+```
+
+##### catch()
+
+-	거절 핸들러만 할당, promise 가 거부된 경우 무엇을 할지 정의
+-	then 메서드의 두번째 인자와 동일한 역할이다.
+
+```javascript
+const promise = new Promise(function(resolve, reject) {
+  resolve();
+});
+promise.then(function(){
+  throw new Error("Error in then()")  //첫번째 reslove 콜백함수에서 error 가 발생할 경우 제대로 catch 를 할 수 없다.
+}, function(err){
+  console.log("then error : ", err);  //로직 타지 않음..
+});
+```
+
+```javascript
+const promise = new Promise(function(resolve, reject) {
+  resolve();
+});
+promise.then(function(){
+  throw new Error("Error in then()")  
+}).catch(function(err) {}
+  console.log("then error : ", err);  //resolve 에서의 error catch 가능
+});
+
+```
+
+-	catch() 도 promise chaining 이 가능하다.
+	-	promise.then().catch().then()....
+
+##### all()
+
+-	모든 promise 를 성공하면 resolve, 아닌경우 reject
+
+```javascript
+const pro1 = (param)=>{
+  return new Promise((resolve, reject)=>{
+    param ? resolve("이행1") : reject("거부1");
+  });
+};
+const pro2 = (param)=>{
+  return new Promise((resolve, reject)=>{
+    param ? resolve("이행2") : reject("거부2");
+  });
+};
+Promise.all([pro1(true), pro2(true)]).then((value)=> {
+  console.log(value); //이행1, 이행2
+})
+
+```
+
+-	모든 promise 값이 결정되면 수행되어 값 전체가 출력된다.
+
+```javascript
+const pro1 = new Promise((resolve, reject)=> {
+  resolve(10);
+});
+const pro2 = new Promise((resolve, reject)=> {
+  reject(20); //reject!! reject 발생시 pro1, pro3 이 완료될떄까지 기다리지 않고 즉시 pro2 를 catch 로 반환한다.
+});
+const pro3 = new Promise((resolve, reject)=> {
+  resolve(30);
+});
+const pro4 = Promise.all([pro1, pro2, pro3]);
+pro4.catch((value)=> {
+  console.log(Array.isArray(value));  //false
+  console.log(value); //20
+})
+```
+
+`promise 는 이벤트, 콜백 보다 비동기 프로그래밍을 개선하기 위해 설계 되었다. new Promise 로 프로미스 객체를 생성하면 콜백 함수 인자로 resolve 와 reject 를 사용할 수 있으며 resolve() 가 실행되면 fulfilled, reject() 가 실행되면 rejected 상태가 된다. then 메소드를 사용하면 resolve 및 reject 핸들러를 할당할 수 있으며 catch 메서드를 사용하면 거절 핸들러만 할당할 수 있다.`
+
+Asynchronous Programming
+------------------------
+
+##### 비동기 프로그래밍
+
+-	비동기 프로그래밍을 위한 강력한 도구로 generator 와 promise
+
+##### 콜백 지옥
+
+-	콜백 함수를 연속사용으로 발생
+-	콜백함수를 다른 함수로 전달하는 순간 그 콜백함수에 대한 제어권을 상실한다.
+
+```javascript
+//콜백지옥..
+//디버깅이 어렵고 에러가 나기 쉽다.
+$.get('url', function(response){
+  userValidator(response, function(data) {
+    userRegister(id, function(data) {
+      userDisplay(result, function(data) {
+        //...
+      });
+    });
+  });
+});
+```
+
+-	Generator 와 Promise 를 결합
+
+```javascript
+const userValidator= ()=> {return new Promise(...)}
+const userRegister= ()=> {return new Promise(...)}
+const userDisplay= ()=> {return new Promise(...)}
+
+const myGenerator = function* () {
+  const user = yield userValidator();
+  yield userRegister(user);
+  yield userDisplay(user);
+};
+//myGenerator.next() 를 호출하면 yield userValidator(); 가실행되어 promise 가 return 된다.
+//이 promise 가 이행이되면 then 메소드가 실행이된다.
+//이 과정을 외부에서 제너레이터가 끝날 떄까지 반복해서 실행시켜 준다.
+//그러면 각각의 함수가 제어권을 직접 다루지 않는 것이 가능하다.
+//next() -> yield -> then() ... 순서로
+```
+
+`promise 는 비동기 작업이 리턴할 수 있는 공통 인터페이스를 제공하며 generator 는 yield 연산자를 사용하여 비동기 응답을 기다리고 적절하게 응답할 수 있습니다. generator 와 promise 를 결합할때 비동기 프로그래밍에 더욱 유용한 도구가 되는것 을 볼 수 있다.`
